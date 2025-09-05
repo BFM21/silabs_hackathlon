@@ -1,6 +1,6 @@
 #include <Wire.h>
-#include "includes/si7021.h"
-#include "includes/veml6035.h"
+#include "si7021.h"
+#include "veml6035.h"
 
 // PIN DEFINITIONS
 #define PIN_SENSOR_ENABLE 17  

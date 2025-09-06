@@ -1,7 +1,9 @@
 #include "si7021.h"
 
+// Humidity and Temperature calculation is based on the datasheet.
+// https://www.silabs.com/documents/public/data-sheets/Si7021-A20.pdf
+
 SI7021::SI7021() {
-    // Constructor - nothing needed here since Wire is initialized externally
 }
 
 int SI7021::init() {
@@ -14,7 +16,7 @@ int SI7021::reset() {
     if (Wire.endTransmission() != 0) {
         return 1;
     }
-    delay(100); // Wait for reset to complete
+    delay(100); 
     return 0;
 }
 
@@ -25,7 +27,7 @@ float SI7021::readHumidity() {
         return ERROR_VALUE;
     }
     
-    delay(30); // Wait for measurement
+    delay(30); 
     
     Wire.requestFrom(SI7021_ADDRESS, 2);
     if (Wire.available() != 2) {
@@ -37,7 +39,7 @@ float SI7021::readHumidity() {
     
     float humidity = ((float)rawHumidity * 125.0 / 65536.0) - 6.0;
     
-    // Clamp to valid range
+    
     if (humidity < 0) humidity = 0;
     if (humidity > 100) humidity = 100;
     
@@ -51,7 +53,7 @@ float SI7021::readTemperature() {
         return ERROR_VALUE;
     }
     
-    delay(30); // Wait for measurement
+    delay(30); 
     
     Wire.requestFrom(SI7021_ADDRESS, 2);
     if (Wire.available() != 2) {

@@ -4,6 +4,10 @@
 #include <Arduino.h>
 #include <Wire.h>
 
+// addresses are according to the sensor datasheet
+// https://www.silabs.com/documents/public/data-sheets/Si7021-A20.pdf
+
+
 // SI7021 I2C Address
 #define SI7021_ADDRESS 0x40
 

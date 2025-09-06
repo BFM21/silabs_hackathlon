@@ -31,9 +31,12 @@ void setup() {
     
     // Initialize light sensor
     if (lightSensor.init() != 0) {
+
         Serial.println("Ambient Light Sensor setup failed");
+
     } else {
         Serial.println("Ambient Light Sensor Ready");
+        lightSensor.setPowerSaveMode(1, S_04);
     }
 }
 

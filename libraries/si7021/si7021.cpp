@@ -1,4 +1,5 @@
 #include "si7021.h"
+#include "pins_arduino.h"
 
 // Humidity and Temperature calculation is based on the datasheet.
 // https://www.silabs.com/documents/public/data-sheets/Si7021-A20.pdf
@@ -7,6 +8,9 @@ SI7021::SI7021() {
 }
 
 int SI7021::init() {
+    pinMode(PIN_SENSOR_ENABLE, OUTPUT);
+    digitalWrite(PIN_SENSOR_ENABLE, HIGH);
+    delay(100);
     return reset();
 }
 

@@ -19,27 +19,27 @@
 #define VEML6035_WCH_OUTPUT     0x05
 #define VEML6035_INT_STATUS     0x06
 
-enum IntegrationTime{
-    MS_25 = 0x0C,
-    MS_50 = 0x08,
-    MS_100 = 0x00,
-    MS_200 = 0x01,
-    MS_400 = 0x02,
-    MS_800 = 0x03
+struct IntegrationTime{
+    static const uint8_t MS_25 = 0x0C;
+    static const uint8_t MS_50 = 0x08;
+    static const uint8_t MS_100 = 0x00;
+    static const uint8_t MS_200 = 0x01;
+    static const uint8_t MS_400 = 0x02;
+    static const uint8_t MS_800 = 0x03;
 };
 
-enum PersistenceSettings{
-    ONE = 0x00,
-    TWO = 0x01,
-    FOUR = 0x02,
-    EIGHT = 0x03
+struct PersistenceSettings{
+    static const uint8_t ONE = 0x00;
+    static const uint8_t TWO = 0x01;
+    static const uint8_t FOUR = 0x02;
+    static const uint8_t EIGHT = 0x03;
 };
 
-enum PowerSafeModeWaitTime{
-    S_04 = 0x00,
-    S_08 = 0x01,
-    S_16 = 0x02,
-    S_32 = 0x03
+struct PowerSafeModeWaitTime{
+    static const uint8_t S_04 = 0x00;
+    static const uint8_t S_08 = 0x01;
+    static const uint8_t S_16 = 0x02;
+    static const uint8_t S_32 = 0x03;
 };
 
 
@@ -54,7 +54,7 @@ public:
     int init(uint16_t config_value);
 
     // Initialize by setting individual configuration values
-    int init(char sd, char int_en, char channel_en, char int_channel, PersistenceSettings als_pers, IntegrationTime als_it, char gain, char dg, char sens);
+    int init(char sd, char int_en, char channel_en, char int_channel, uint8_t als_pers, uint8_t als_it, char gain, char dg, char sens);
     
     // Set power save mode
     int setHighTresholdWindow(uint8_t htw);
@@ -63,7 +63,7 @@ public:
     int setLowTresholdWindow(uint8_t ltw);
 
     // Set power save mode
-    int setPowerSaveMode(char psm_enabled, PowerSafeModeWaitTime psm_wait_time);
+    int setPowerSaveMode(char psm_enabled, uint8_t psm_wait_time);
     
     // Set configuration register
     int setConfig(uint16_t config_value);

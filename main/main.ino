@@ -1,11 +1,8 @@
 #include <Wire.h>
 #include "si7021.h"
 #include "veml6035.h"
-
-// PIN DEFINITIONS
-#define PIN_SENSOR_ENABLE 17  
-#define PIN_WIRE_SDA      6   
-#define PIN_WIRE_SCL      11  
+#include "ltr329.h"
+#include "pins_arduino.h"
 
 // Create sensor objects
 SI7021 tempHumiditySensor;
@@ -13,11 +10,6 @@ VEML6035 lightSensor;
 
 void setup() {
     Serial.begin(115200);
-    
-    // Enable sensors
-    pinMode(PIN_SENSOR_ENABLE, OUTPUT);
-    digitalWrite(PIN_SENSOR_ENABLE, HIGH);
-    delay(100);
     
     // Initialize I2C
     Wire.begin();
@@ -36,7 +28,6 @@ void setup() {
 
     } else {
         Serial.println("Ambient Light Sensor Ready");
-        lightSensor.setPowerSaveMode(1, S_04);
     }
 }
 
@@ -44,7 +35,6 @@ void loop() {
     // Read sensors
     float humidity = tempHumiditySensor.readHumidity();
     float temperature = tempHumiditySensor.readTemperature();
-    float light = lightSensor.readAmbientLight();
     
     // Display temperature and humidity
     if (humidity != -999 && temperature != -999) {
@@ -56,8 +46,12 @@ void loop() {
     } else {
         Serial.println("Error reading temperature/humidity sensor data");
     }
-    
-    // Display light
+
+    // IF USING VEML60635
+
+    float light = lightSensor.readAmbientLight();
+
+    // // Display light
     if (light != -999) {
         Serial.print("Light: ");
         Serial.print(light, 2);
@@ -66,5 +60,28 @@ void loop() {
         Serial.println("Error reading light sensor data");
     }
     
+    // IF USING LTR329
+
+    // int isDataAvailable = lightSensor.isNewDataAndValid();
+    // uint16_t light = 0;
+    // if(isDataAvailable == 0){
+    //     light = lightSensor.readASLChannel1();
+    //     if(light != -1){
+    //         Serial.print("ALS value from CH1: ");
+    //         Serial.println(light);
+    //     }else{
+    //         Serial.println("Error reading ALS data from CH1");
+    //     }
+    //     light = lightSensor.readASLChannel0();
+    //     if(light != -1){
+    //         Serial.print("ALS value from CH0: ");
+    //         Serial.println(light);
+    //     }else{
+    //         Serial.println("Error reading ALS data from CH0");
+    //     }
+    // }else{
+    //     Serial.println("ALS data is old or invalid");
+    // }
+
     delay(1000);
 }

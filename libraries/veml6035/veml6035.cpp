@@ -1,9 +1,15 @@
 #include "veml6035.h"
-
+#include "pins_arduino.h"
 // Calculations and initialization processes are based on the sensor datasheet
 // https://www.vishay.com/docs/84889/veml6035.pdf
 
 VEML6035::VEML6035() {
+}
+
+static void enableSensor(){
+    pinMode(PIN_SENSOR_ENABLE, OUTPUT);
+    digitalWrite(PIN_SENSOR_ENABLE, HIGH);
+    delay(100);
 }
 
 int VEML6035::init() {
@@ -11,6 +17,7 @@ int VEML6035::init() {
 }
 
 int VEML6035::init(uint16_t configValue) {
+    enableSensor();
     if (setConfig(configValue) != 0) {
         return 1;
     }
@@ -19,7 +26,7 @@ int VEML6035::init(uint16_t configValue) {
     return 0;
 }
 
-int VEML6035::init(char sd, char int_en, char channel_en, char int_channel, PersistenceSettings als_pers, IntegrationTime als_it, char gain, char dg, char sens) {
+int VEML6035::init(char sd, char int_en, char channel_en, char int_channel, uint8_t als_pers, uint8_t als_it, char gain, char dg, char sens) {
     uint16_t configValue = 0;
     
     // Bit assignments based on VEML6035 datasheet
@@ -83,7 +90,7 @@ int VEML6035::setLowTresholdWindow(uint8_t ltw) {
     return 0;
 }
 
-int VEML6035::setPowerSaveMode(char psm_enabled, PowerSafeModeWaitTime psm_wait_time) {
+int VEML6035::setPowerSaveMode(char psm_enabled, uint8_t psm_wait_time) {
     Wire.beginTransmission(VEML6035_ADDRESS);
     Wire.write(VEML6035_PSM_ADDRESS);
     uint8_t psm = (psm_enabled & 0x01);
@@ -163,7 +170,7 @@ float VEML6035::readInterruptStatus() {
 }
 
 float VEML6035::getLuxResolutionValue() {
-    IntegrationTime it = (IntegrationTime)((config_value >> 6) & 0x0F);
+    uint8_t it = (config_value >> 6) & 0x0F;
     
     uint8_t gain = (config_value >> 10) & 0x01;
     
@@ -174,12 +181,12 @@ float VEML6035::getLuxResolutionValue() {
     // Base resolution values for DG=0, GAIN=0, SENS=0 
     float baseResolution;
     switch(it) {
-        case MS_25:  baseResolution = 0.0512; break;  // 0.0512 lux/count 
-        case MS_50:  baseResolution = 0.0256; break;  // 0.0256 lux/count 
-        case MS_100: baseResolution = 0.0128; break;  // 0.0128 lux/count 
-        case MS_200: baseResolution = 0.0064;  break;  // 0.0064 lux/count  
-        case MS_400: baseResolution = 0.0032;  break;  // 0.0032 lux/count 
-        case MS_800: baseResolution = 0.0016;  break;  // 0.0016 lux/count
+        case IntegrationTime::MS_25:  baseResolution = 0.0512; break;  // 0.0512 lux/count 
+        case IntegrationTime::MS_50:  baseResolution = 0.0256; break;  // 0.0256 lux/count 
+        case IntegrationTime::MS_100: baseResolution = 0.0128; break;  // 0.0128 lux/count 
+        case IntegrationTime::MS_200: baseResolution = 0.0064;  break;  // 0.0064 lux/count  
+        case IntegrationTime::MS_400: baseResolution = 0.0032;  break;  // 0.0032 lux/count 
+        case IntegrationTime::MS_800: baseResolution = 0.0016;  break;  // 0.0016 lux/count
         default:     baseResolution = 0.0128; break;  // Default to 100ms
     }
     

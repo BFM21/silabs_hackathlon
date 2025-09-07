@@ -1,7 +1,8 @@
 #include "ltr329.h"
 #include "pins_arduino.h"
+
 // Calculations and initialization processes are based on the sensor datasheet
-// https://www.vishay.com/docs/84889/LTR329.pdf
+// https://cdn-shop.adafruit.com/product-files/5591/LTR-329ALS-01-Lite-On-datasheet-140998467.pdf
 
 LTR329::LTR329() {
 }

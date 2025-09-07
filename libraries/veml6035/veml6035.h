@@ -47,37 +47,37 @@ class VEML6035 {
 public:
     VEML6035();
     
-    // Initialize the sensor with default configuration
+    
     int init();
     
-    // Initialize the sensor with custom configuration
+    
     int init(uint16_t config_value);
 
-    // Initialize by setting individual configuration values
+    
     int init(char sd, char int_en, char channel_en, char int_channel, uint8_t als_pers, uint8_t als_it, char gain, char dg, char sens);
     
-    // Set power save mode
+    
     int setHighTresholdWindow(uint8_t htw);
 
-    // Set power save mode
+    
     int setLowTresholdWindow(uint8_t ltw);
 
-    // Set power save mode
+    
     int setPowerSaveMode(char psm_enabled, uint8_t psm_wait_time);
     
-    // Set configuration register
+    
     int setConfig(uint16_t config_value);
 
-    // Read ambient light in lux
+    
     float readAmbientLight();
     
-    // Read white channel data
+    
     float readWhiteChannel();
 
-    // Read white channel data
+    
     float readInterruptStatus();
     
-    // Get lux resolution value based on config
+    
     float getLuxResolutionValue();
 
     uint16_t getConfig();
@@ -87,11 +87,11 @@ private:
 
     uint16_t config_value = 0;
 
-    // Error value returned when reading fails
+    
     static constexpr float ERROR_VALUE = -999.0;
     
-    // Default configuration value (your working config)
+    
     static constexpr uint16_t DEFAULT_CONFIG = 0x1030;
 };
 
-#endif // VEML6035_H
+#endif 

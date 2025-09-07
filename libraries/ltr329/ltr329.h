@@ -7,8 +7,15 @@
 // All addresses are according to the sensors' datasheet
 // https://www.vishay.com/docs/84889/LTR329.pdf
 
+/* 
+ WARNING: 
+ THIS SENSOR IS USING THE SAME I2C ADDRESS AS THE SI7021
+ ON THE xG24 DEV KIT BOARD AND BECAUSE OF THE ADDRESS COLLISION 
+ IT WON'T WORK WHEN CONNECTED
+*/
+
 // LTR329 I2C Address
-#define LTR329_ADDRESS 0x29
+#define LTR329_ADDRESS 0x29 
 
 // LTR329 Register Addresses
 #define LTR329_ALS_CONTR          0x80
@@ -86,4 +93,4 @@ private:
 
 };
 
-#endif // LTR329_H
+#endif

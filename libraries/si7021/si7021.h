@@ -23,24 +23,23 @@ class SI7021 {
 public:
     SI7021();
     
-    // Initialize the sensor
+    
     int init();
     
-    // Read humidity as percentage (0-100%)
     float readHumidity();
     
-    // Read temperature in Celsius
+    
     float readTemperature();
     
-    // Read temperature from previous humidity measurement
+    
     float readTemperatureFromHumidity();
     
-    // Reset the sensor
+    
     int reset();
 
 private:
-    // Error value returned when reading fails
+    
     static constexpr float ERROR_VALUE = -999.0;
 };
 
-#endif // SI7021_H
+#endif

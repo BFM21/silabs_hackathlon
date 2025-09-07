@@ -1,28 +1,36 @@
 #include <Wire.h>
+
 #include "si7021.h"
 #include "veml6035.h"
-#include "ltr329.h"
+#include "sht30.h"
 #include "pins_arduino.h"
 
-// Create sensor objects
-SI7021 tempHumiditySensor;
-VEML6035 lightSensor;
+SI7021 si7021_ths;
+VEML6035 veml6035_als;
+SHT30 sht30_ths;
 
 void setup() {
+
     Serial.begin(115200);
-    
-    // Initialize I2C
+
     Wire.begin();
     
-    // Initialize temperature & humidity sensor
-    if (tempHumiditySensor.init() != 0) {
-        Serial.println("Temperature & Humidity Sensor setup failed");
+    
+    if (si7021_ths.init() != 0) {
+        Serial.println("SI7021 Temperature & Humidity Sensor setup failed");
     } else {
-        Serial.println("Temperature & Humidity Sensor Ready");
+        Serial.println("SI7021 Temperature & Humidity Sensor Ready");
+    }
+
+    
+    if (sht30_ths.init() != 0) {
+        Serial.println("SHT30 Temperature & Humidity Sensor setup failed");
+    } else {
+        Serial.println("SHT30 Temperature & Humidity Sensor Ready");
     }
     
-    // Initialize light sensor
-    if (lightSensor.init() != 0) {
+    
+    if (veml6035_als.init() != 0) {
 
         Serial.println("Ambient Light Sensor setup failed");
 
@@ -32,26 +40,40 @@ void setup() {
 }
 
 void loop() {
-    // Read sensors
-    float humidity = tempHumiditySensor.readHumidity();
-    float temperature = tempHumiditySensor.readTemperature();
     
-    // Display temperature and humidity
-    if (humidity != -999 && temperature != -999) {
+    float si7021_h = si7021_ths.readHumidity();
+    float si7021_t = si7021_ths.readTemperature();
+    
+    
+    if (si7021_h != -999 && si7021_t != -999) {
+        Serial.print("SI7021 - ");
         Serial.print("Humidity: ");
-        Serial.print(humidity, 2);
+        Serial.print(si7021_h, 2);
         Serial.print(" %RH, Temperature: ");
-        Serial.print(temperature, 2);
+        Serial.print(si7021_t, 2);
         Serial.println(" °C");
     } else {
         Serial.println("Error reading temperature/humidity sensor data");
     }
 
-    // IF USING VEML60635
+    float sht30_h, sht30_t;
+    uint8_t result = sht30_ths.readTempHumidity(&sht30_t, &sht30_h, SHT30_Repeatability::HIGH);
 
-    float light = lightSensor.readAmbientLight();
+    if (result == SHT30_OK) {
+        Serial.print("SHT30 - ");
+        Serial.print("Humidity: ");
+        Serial.print(sht30_h, 2);
+        Serial.print(" %RH, Temperature: ");
+        Serial.print(sht30_t, 2);
+        Serial.println(" °C");
+    } else {
+        Serial.print("Error: ");
+        Serial.println(result);
+    }
+  
 
-    // // Display light
+    float light = veml6035_als.readAmbientLight();
+
     if (light != -999) {
         Serial.print("Light: ");
         Serial.print(light, 2);
@@ -60,28 +82,5 @@ void loop() {
         Serial.println("Error reading light sensor data");
     }
     
-    // IF USING LTR329
-
-    // int isDataAvailable = lightSensor.isNewDataAndValid();
-    // uint16_t light = 0;
-    // if(isDataAvailable == 0){
-    //     light = lightSensor.readASLChannel1();
-    //     if(light != -1){
-    //         Serial.print("ALS value from CH1: ");
-    //         Serial.println(light);
-    //     }else{
-    //         Serial.println("Error reading ALS data from CH1");
-    //     }
-    //     light = lightSensor.readASLChannel0();
-    //     if(light != -1){
-    //         Serial.print("ALS value from CH0: ");
-    //         Serial.println(light);
-    //     }else{
-    //         Serial.println("Error reading ALS data from CH0");
-    //     }
-    // }else{
-    //     Serial.println("ALS data is old or invalid");
-    // }
-
     delay(1000);
 }

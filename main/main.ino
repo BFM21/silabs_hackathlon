@@ -29,7 +29,11 @@ const char SI7021_T_UUID[] = "12345678-1234-5678-1234-56789abcdef2";
 const char SHT30_H_UUID[] = "12345678-1234-5678-1234-56789abcdef3";
 const char SHT30_T_UUID[] = "12345678-1234-5678-1234-56789abcdef4";
 const char VEML6035_UUID[] = "12345678-1234-5678-1234-56789abcdef5";
-const char IMU_UUID[] = "12345678-1234-5678-1234-56789abcdef6";
+const char IMU_CS_UUID[] = "12345678-1234-5678-1234-56789abcdef6";
+const char IMU_MI_UUID[] = "12345678-1234-5678-1234-56789abcdef7";
+const char IMU_MPM_UUID[] = "12345678-1234-5678-1234-56789abcdef8";
+const char IMU_ILA_UUID[] = "12345678-1234-5678-1234-56789abcdef9";
+const char IMU_SDM_UUID[] = "12345678-1234-5678-1234-56789abcdee0";
 
 // BLE service and characteristics
 BLEService sensorService(SERVICE_UUID);
@@ -38,41 +42,17 @@ BLECharacteristic si7021_h_char(SI7021_H_UUID, BLERead | BLENotify, sizeof(float
 BLECharacteristic sht30_t_char(SHT30_T_UUID, BLERead | BLENotify, sizeof(float));
 BLECharacteristic sht30_h_char(SHT30_H_UUID, BLERead | BLENotify, sizeof(float));
 BLECharacteristic veml6035_char(VEML6035_UUID, BLERead | BLENotify, sizeof(float));
-// Increased buffer size for JSON string
-BLECharacteristic imu_char(IMU_UUID, BLERead | BLENotify, 200);
+BLECharacteristic imu_cs_char(IMU_CS_UUID, BLERead | BLENotify, sizeof(uint8_t));
+BLECharacteristic imu_mi_char(IMU_MI_UUID, BLERead | BLENotify, sizeof(float));
+BLECharacteristic imu_mpm_char(IMU_MPM_UUID, BLERead | BLENotify, sizeof(int));
+BLECharacteristic imu_ila_char(IMU_ILA_UUID, BLERead | BLENotify, sizeof(bool));
+BLECharacteristic imu_sdm_char(IMU_SDM_UUID, BLERead | BLENotify, sizeof(unsigned long));
 
 unsigned long lastUpdate = 0;
-const unsigned long updateInterval = 2000;
+const unsigned long updateInterval = 5000;
 
-// Function to convert ActivityState enum to string
-const char *activityStateToString(ActivityState state)
-{
-  switch (state)
-  {
-  case STILL:
-    return "STILL";
-  case MOVING:
-    return "MOVING";
-  case ACTIVE:
-    return "ACTIVE";
-  default:
-    return "UNKNOWN";
-  }
-}
 
-// Function to create JSON string from MovementData
-String createMovementDataJSON(const MovementData &data)
-{
-  String json = "{";
-  json += "\"sensor\":\"imu\",";
-  json += "\"current_state\":\"" + String(activityStateToString(data.current_state)) + "\",";
-  json += "\"movement_intensity\":" + String(data.movement_intensity, 3) + ",";
-  json += "\"movements_per_minute\":" + String(data.movements_per_minute) + ",";
-  json += "\"is_likely_asleep\":" + String(data.is_likely_asleep ? "true" : "false") + ",";
-  json += "\"still_duration_minutes\":" + String(data.still_duration_minutes);
-  json += "}";
-  return json;
-}
+
 
 void setup()
 {
@@ -144,7 +124,11 @@ void setup()
   sensorService.addCharacteristic(sht30_t_char);
   sensorService.addCharacteristic(sht30_h_char);
   sensorService.addCharacteristic(veml6035_char);
-  sensorService.addCharacteristic(imu_char);
+  sensorService.addCharacteristic(imu_cs_char);
+  sensorService.addCharacteristic(imu_mi_char);
+  sensorService.addCharacteristic(imu_mpm_char);
+  sensorService.addCharacteristic(imu_ila_char);
+  sensorService.addCharacteristic(imu_sdm_char);
   BLE.addService(sensorService);
 
   if (!BLE.advertise())
@@ -166,19 +150,11 @@ void loop()
     si7021_h = si7021_ths.readHumidity();
     si7021_t = si7021_ths.readTemperature();
 
-    if (si7021_h != -999 && si7021_t != -999)
+    if (si7021_h == -999 || si7021_t == -999)
     {
-      Serial.print("SI7021 - ");
-      Serial.print("Humidity: ");
-      Serial.print(si7021_h, 2);
-      Serial.print(" %RH, Temperature: ");
-      Serial.print(si7021_t, 2);
-      Serial.println(" °C");
+     Serial.println("Error reading temperature/humidity sensor data");
     }
-    else
-    {
-      Serial.println("Error reading temperature/humidity sensor data");
-    }
+   
   }
 
   if (!sht30SetupFailed)
@@ -186,22 +162,14 @@ void loop()
 
     uint8_t result = sht30_ths.readTempHumidity(&sht30_t, &sht30_h, SHT30_Repeatability::HIGH);
 
-    if (result == SHT30_OK)
+    if (result != SHT30_OK)
     {
-      Serial.print("SHT30 - ");
-      Serial.print("Humidity: ");
-      Serial.print(sht30_h, 2);
-      Serial.print(" %RH, Temperature: ");
-      Serial.print(sht30_t, 2);
-      Serial.println(" °C");
-    }
-    else
-    {
-      sht30_h = -999.0;
+     sht30_h = -999.0;
       sht30_t = -999.0;
       Serial.print("Error: ");
       Serial.println(result);
     }
+   
   }
 
   if (!veml6035SetupFailed)
@@ -209,16 +177,10 @@ void loop()
 
     veml6035_l = veml6035_als.readAmbientLight();
 
-    if (veml6035_l != -999)
+    if (veml6035_l == -999)
     {
-      Serial.print("Light: ");
-      Serial.print(veml6035_l, 2);
-      Serial.println(" lux");
-    }
-    else
-    {
-      Serial.println("Error reading light sensor data");
-    }
+       Serial.println("Error reading light sensor data");
+      }
   }
 
   if (!imuSetupFailed)
@@ -242,7 +204,6 @@ void loop()
         if (imu.shouldUpdateMinutelyStats())
         {
           imu.updateMinutelyStats();
-          imu.printStatus();
           movementData = imu.getMovementData();
         }
       }
@@ -269,32 +230,58 @@ void loop()
         if (si7021_t != -999.0)
         {
           si7021_t_char.writeValue((byte *)&si7021_t, sizeof(si7021_t));
+          Serial.print("SI7021 Temperature: ");
+          Serial.println(si7021_t);
         }
         if (si7021_h != -999.0)
         {
           si7021_h_char.writeValue((byte *)&si7021_h, sizeof(si7021_h));
+          Serial.print("SI7021 Humidity: ");
+          Serial.println(si7021_h);
         }
         if (sht30_t != -999.0)
         {
           sht30_t_char.writeValue((byte *)&sht30_t, sizeof(sht30_t));
+          Serial.print("SHT30 Temperature: ");
+          Serial.println(sht30_t);
         }
         if (sht30_h != -999.0)
         {
           sht30_h_char.writeValue((byte *)&sht30_h, sizeof(sht30_h));
+          Serial.print("SHT30 Humidity: ");
+          Serial.println(sht30_h);
         }
         if (veml6035_l != -999.0)
         {
           veml6035_char.writeValue((byte *)&veml6035_l, sizeof(veml6035_l));
+          Serial.print("VEML6035 Light: ");
+          Serial.println(veml6035_l);
         }
 
-        // Send IMU data as JSON
-        String imuJson = createMovementDataJSON(movementData);
-        Serial.print("Sending IMU JSON: ");
-        Serial.println(imuJson);
+        // Send IMU data individually
+        if (!imuSetupFailed)
+        {
+          uint8_t currentState = (uint8_t)movementData.current_state;
+          imu_cs_char.writeValue((byte *)&currentState, sizeof(currentState));
+          Serial.print("IMU Current State: ");
+          Serial.println(currentState);
 
-        // Convert String to byte array and send
-        const char *jsonCStr = imuJson.c_str();
-        imu_char.writeValue((byte *)jsonCStr, imuJson.length());
+          imu_mi_char.writeValue((byte *)&movementData.movement_intensity, sizeof(movementData.movement_intensity));
+          Serial.print("IMU Movement Intensity: ");
+          Serial.println(movementData.movement_intensity);
+
+          imu_mpm_char.writeValue((byte *)&movementData.movements_per_minute, sizeof(movementData.movements_per_minute));
+          Serial.print("IMU Movements Per Minute: ");
+          Serial.println(movementData.movements_per_minute);
+
+          imu_ila_char.writeValue((byte *)&movementData.is_likely_asleep, sizeof(movementData.is_likely_asleep));
+          Serial.print("IMU Is Likely Asleep: ");
+          Serial.println(movementData.is_likely_asleep);
+
+          imu_sdm_char.writeValue((byte *)&movementData.still_duration_minutes, sizeof(movementData.still_duration_minutes));
+          Serial.print("IMU Still Duration Minutes: ");
+          Serial.println(movementData.still_duration_minutes);
+        }
       }
     }
     else

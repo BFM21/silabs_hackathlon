@@ -140,15 +140,16 @@ void loop() {
 
 void broadcastSensorData(float si7021_t, float si7021_h, float veml6035_l) {
   SensorData data;
-  
+
   // Pack data into structure
+  data.header = 0xFF;  // Explicitly set header
   data.counter = packetCounter++;
-  
+
   // Convert floats to integers for compact transmission
   data.si7021_temp = (si7021_t != -999.0) ? (int16_t)(si7021_t * 100) : -99900;
   data.si7021_hum = (si7021_h != -999.0) ? (uint16_t)(si7021_h * 100) : 0;
   data.veml6035_light = (veml6035_l != -999.0) ? (uint16_t)(veml6035_l * 100) : 0;
-  
+
   // IMU data
   if (!imuSetupFailed) {
     data.imu_state = (uint8_t)movementData.current_state;
@@ -163,22 +164,37 @@ void broadcastSensorData(float si7021_t, float si7021_h, float veml6035_l) {
     data.is_likely_asleep = 0;
     data.still_duration_minutes = 0;
   }
-  
+
   // Calculate checksum
   data.checksum = calculateChecksum(data);
-  
+
   // Stop advertising to update data
+  // Always stop before updating manufacturer data
   BLE.stopAdvertise();
-  
+  delay(10); // Small delay to ensure stop completes
+
   // Set manufacturer data with sensor readings
   BLE.setManufacturerData((uint8_t*)&data, sizeof(data));
-  
+
   // Set advertising parameters
   BLE.setAdvertisingInterval(200); // 200ms intervals for frequent updates
-  
+
   // Start advertising with new data
-  BLE.advertise();
-  
+  if (!BLE.advertise()) {
+    Serial.println("ERROR: Failed to start advertising!");
+    // Try to recover
+    BLE.end();
+    delay(100);
+    if (BLE.begin()) {
+      BLE.setLocalName(DEVICE_NAME);
+      BLE.setManufacturerData((uint8_t*)&data, sizeof(data));
+      BLE.setAdvertisingInterval(200);
+      BLE.advertise();
+    }
+  } else {
+    Serial.println("DEBUG: Successfully advertising wearable data");
+  }
+
   // Print data for debugging
   printSensorData(data, si7021_t, si7021_h, veml6035_l);
 }

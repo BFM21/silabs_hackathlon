@@ -11,7 +11,7 @@ float temperature = 20.0;
 float humidity = 50.0;
 int counter = 0;
 unsigned long previousMillis = 0;
-const long interval = 1000; // Update every 1 second
+const long interval = 2000; // Update every 2 seconds - more stable
 
 const char DEVICE_NAME[] = "Alva-Bedroom";
 
@@ -107,24 +107,40 @@ void updateSensorData() {
 void broadcastData() {
   // Prepare data structure
   SensorData data;
+  data.header = 0xFF;  // Explicitly set header
   data.counter = counter;
   data.temperature = (int16_t)(temperature * 100);  // Store with 2 decimal precision
   data.humidity = (uint16_t)(humidity * 100);       // Store with 2 decimal precision
-  
+
   // Calculate simple checksum
   data.checksum = (data.header + data.counter + data.temperature + data.humidity + data.battery) & 0xFF;
-  
+
   // Stop advertising to update data
+  // Always stop before updating manufacturer data
   BLE.stopAdvertise();
-  
+  delay(10); // Small delay to ensure stop completes
+
   // Set manufacturer data (this is where our sensor data goes)
   BLE.setManufacturerData((uint8_t*)&data, sizeof(data));
-  
+
   // Set advertising parameters for better broadcasting
-  BLE.setAdvertisingInterval(100); // 100ms intervals for frequent updates
-  
+  BLE.setAdvertisingInterval(200); // 200ms intervals - less aggressive than 100ms
+
   // Start advertising again with new data
-  BLE.advertise();
+  if (!BLE.advertise()) {
+    Serial.println("ERROR: Failed to start advertising!");
+    // Try to recover
+    BLE.end();
+    delay(100);
+    if (BLE.begin()) {
+      BLE.setLocalName(DEVICE_NAME);
+      BLE.setManufacturerData((uint8_t*)&data, sizeof(data));
+      BLE.setAdvertisingInterval(200);
+      BLE.advertise();
+    }
+  } else {
+    Serial.println("DEBUG: Successfully advertising data");
+  }
 }
 
 void printData() {

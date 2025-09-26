@@ -90,6 +90,10 @@ void setup() {
   Serial.begin(115200);
   while (!Serial);
 
+  // Initialize LED
+  pinMode(LED_BUILTIN_1, OUTPUT);
+  digitalWrite(LED_BUILTIN_1, LOW);
+
   // Initialize BLE
   if (!BLE.begin()) {
     // Serial.println("Starting BLE failed!");
@@ -191,6 +195,9 @@ void loop() {
 
   // Output combined JSON at regular intervals
   outputCombinedJson();
+
+  // Handle serial commands for LED control
+  handleSerialCommands();
 
   delay(10);  // Reduced delay for more responsive scanning
 }
@@ -662,5 +669,18 @@ void outputCombinedJson() {
     Serial.println(toJson(combinedData.si7021_temp, combinedData.si7021_hum,
                          combinedData.sht30_temp, combinedData.sht30_hum,
                          combinedData.veml6035_light, combinedData.imu_data));
+  }
+}
+
+void handleSerialCommands() {
+  if (Serial.available()) {
+    String command = Serial.readStringUntil('\n');
+    command.trim();
+
+    if (command == "LED_ON") {
+      digitalWrite(LED_BUILTIN_1, HIGH);
+    } else if (command == "LED_OFF") {
+      digitalWrite(LED_BUILTIN_1, LOW);
+    }
   }
 }
